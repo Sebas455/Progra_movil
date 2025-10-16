@@ -41,8 +41,8 @@ export default function Calculadora() {
       <View style={styles.botones}>
         <Button title="+" onPress={sumar} />
         <Button title="-" onPress={restar} />
-        <Button title="×" onPress={multiplicar} />
-        <Button title="÷" onPress={dividir} />
+        <Button title="*" onPress={multiplicar} />
+        <Button title="/" onPress={dividir} />
       </View>
 
       {resultado !== null && (
