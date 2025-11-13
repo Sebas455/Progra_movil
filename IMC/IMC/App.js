@@ -12,17 +12,17 @@ export default function IMC() {
     const a = parseFloat(altura);
 
     if (!p || !a || a <= 0) {
-      setResultado('⚠️ Por favor ingresa valores válidos.');
+      setResultado('Por favor ingresa valores válidos.');
       return;
     }
 
     // 🔎 Validar rangos razonables (peso y altura)
     if (p < 20 || p > 300) {
-      setResultado('⚠️ El peso debe estar entre 20 kg y 300 kg.');
+      setResultado('El peso debe estar entre 20 kg y 300 kg.');
       return;
     }
     if (a < 0.5 || a > 2.5) {
-      setResultado('⚠️ La altura debe estar entre 0.5 m y 2.5 m.');
+      setResultado('La altura debe estar entre 0.5 m y 2.5 m.');
       return;
     }
 
