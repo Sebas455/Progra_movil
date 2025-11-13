@@ -16,7 +16,6 @@ export default function IMC() {
       return;
     }
 
-    // 🔎 Validar rangos razonables (peso y altura)
     if (p < 20 || p > 300) {
       setResultado('El peso debe estar entre 20 kg y 300 kg.');
       return;
