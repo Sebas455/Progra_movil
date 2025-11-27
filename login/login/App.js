@@ -1,12 +1,35 @@
-import { useState } from "react";
-import { View, TextInput, Button, Text } from "react-native";
+import React, { useState, useRef } from "react";
+import { View, TextInput, Button, Text, Image } from "react-native";
 import { auth } from "./firebase";
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
+import { CameraView, useCameraPermissions } from "expo-camera";
 
 export default function App() {
+  const [permission, requestPermission] = useCameraPermissions();
+  const cameraRef = useRef(null);
+  const [photo, setPhoto] = useState(null);
+
   const [email, setEmail] = useState("");
   const [pass, setPass] = useState("");
   const [mensaje, setMensaje] = useState("");
+
+  if (!permission) return <View />;
+
+  if (!permission.granted) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <Text>Necesitas permitir acceso a la cámara</Text>
+        <Button title="Dar permiso" onPress={requestPermission} />
+      </View>
+    );
+  }
+
+  const takePhoto = async () => {
+    if (cameraRef.current) {
+      const result = await cameraRef.current.takePictureAsync();
+      setPhoto(result.uri);
+    }
+  };
 
   const registrar = () => {
     createUserWithEmailAndPassword(auth, email, pass)
@@ -21,23 +44,41 @@ export default function App() {
   };
 
   return (
-    <View style={{ marginTop: 100, padding: 20 }}>
-      <TextInput
-        placeholder="Email"
-        onChangeText={setEmail}
-        style={{ borderWidth: 1, padding: 10, marginBottom: 10 }}
-      />
-      <TextInput
-        placeholder="Password"
-        secureTextEntry
-        onChangeText={setPass}
-        style={{ borderWidth: 1, padding: 10, marginBottom: 10 }}
-      />
+    <View style={{ flex: 1 }}>
+      {/* Cámara */}
+      <View style={{ flex: 1 }}>
+        {!photo ? (
+          <>
+            <CameraView ref={cameraRef} style={{ flex: 1 }} />
+            <Button title="Tomar foto" onPress={takePhoto} />
+          </>
+        ) : (
+          <>
+            <Image source={{ uri: photo }} style={{ flex: 1 }} />
+            <Button title="Tomar otra" onPress={() => setPhoto(null)} />
+          </>
+        )}
+      </View>
 
-      <Button title="Registrar" onPress={registrar} />
-      <Button title="Login" onPress={login} />
+      {/* Formulario */}
+      <View style={{ marginTop: 40, padding: 20 }}>
+        <TextInput
+          placeholder="Email"
+          onChangeText={setEmail}
+          style={{ borderWidth: 1, padding: 10, marginBottom: 10 }}
+        />
+        <TextInput
+          placeholder="Password"
+          secureTextEntry
+          onChangeText={setPass}
+          style={{ borderWidth: 1, padding: 10, marginBottom: 10 }}
+        />
 
-      <Text style={{ marginTop: 20 }}>{mensaje}</Text>
+        <Button title="Registrar" onPress={registrar} />
+        <Button title="Login" onPress={login} />
+
+        <Text style={{ marginTop: 20 }}>{mensaje}</Text>
+      </View>
     </View>
   );
 }
