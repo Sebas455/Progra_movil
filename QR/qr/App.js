@@ -31,7 +31,7 @@ export default function App() {
   const cameraRef = useRef(null);
   const [photo, setPhoto] = useState(null);
 
-  // ------------------ AUTH ------------------
+
 
   const handleRegister = async () => {
     try {
@@ -53,7 +53,7 @@ export default function App() {
     }
   };
 
-  // ------------------ PHOTO FUNCTION ------------------
+
 
   const takePhoto = async () => {
     if (cameraRef.current) {
@@ -62,7 +62,7 @@ export default function App() {
     }
   };
 
-  // ------------------ PERMISSIONS ------------------
+
 
   if (!permission) return <View />;
   if (!permission.granted && (screen === "scanner" || screen === "camera")) {
@@ -79,7 +79,7 @@ export default function App() {
     );
   }
 
-  // ------------------ LOGIN SCREEN ------------------
+
 
   if (screen === "login") {
     return (
@@ -112,7 +112,6 @@ export default function App() {
     );
   }
 
-  // ------------------ REGISTER SCREEN ------------------
 
   if (screen === "register") {
     return (
@@ -145,7 +144,7 @@ export default function App() {
     );
   }
 
-  // ------------------ MENU SCREEN ------------------
+
 
   if (screen === "menu") {
     return (
@@ -169,7 +168,7 @@ export default function App() {
     );
   }
 
-  // ------------------ QR SCANNER SCREEN ------------------
+
 
   if (screen === "scanner") {
     return (
@@ -211,7 +210,7 @@ export default function App() {
     );
   }
 
-  // ------------------ CAMERA (PHOTO) SCREEN ------------------
+
 
   if (screen === "camera") {
     return (
