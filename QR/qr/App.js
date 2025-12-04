@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { 
   StyleSheet, 
   Text, 
   View, 
   TextInput, 
-  TouchableOpacity 
+  TouchableOpacity, 
+  Image 
 } from "react-native";
 
 import { CameraView, useCameraPermissions } from "expo-camera";
@@ -16,15 +17,21 @@ import {
 } from "firebase/auth";
 
 export default function App() {
-  const [screen, setScreen] = useState("login"); // login | register | scanner
+  const [screen, setScreen] = useState("login"); 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   const [permission, requestPermission] = useCameraPermissions();
+
+  // QR scan states
   const [scanned, setScanned] = useState(false);
   const [qrData, setQrData] = useState("");
 
-  // ------------------ AUTENTICACIÓN ------------------
+  // Camera (photo) states
+  const cameraRef = useRef(null);
+  const [photo, setPhoto] = useState(null);
+
+  // ------------------ AUTH ------------------
 
   const handleRegister = async () => {
     try {
@@ -40,17 +47,25 @@ export default function App() {
     try {
       await signInWithEmailAndPassword(auth, email, password);
       alert("Login exitoso");
-      setScreen("scanner");
+      setScreen("menu");
     } catch (e) {
       alert(e.message);
     }
   };
 
+  // ------------------ PHOTO FUNCTION ------------------
 
+  const takePhoto = async () => {
+    if (cameraRef.current) {
+      const photoData = await cameraRef.current.takePictureAsync();
+      setPhoto(photoData.uri);
+    }
+  };
+
+  // ------------------ PERMISSIONS ------------------
 
   if (!permission) return <View />;
-
-  if (!permission.granted && screen === "scanner") {
+  if (!permission.granted && (screen === "scanner" || screen === "camera")) {
     return (
       <View style={styles.permissionsContainer}>
         <Text style={styles.permissionText}>
@@ -64,7 +79,7 @@ export default function App() {
     );
   }
 
-
+  // ------------------ LOGIN SCREEN ------------------
 
   if (screen === "login") {
     return (
@@ -97,6 +112,7 @@ export default function App() {
     );
   }
 
+  // ------------------ REGISTER SCREEN ------------------
 
   if (screen === "register") {
     return (
@@ -129,38 +145,106 @@ export default function App() {
     );
   }
 
+  // ------------------ MENU SCREEN ------------------
 
+  if (screen === "menu") {
+    return (
+      <View style={styles.menuContainer}>
+        <Text style={styles.menuTitle}>Selecciona una opción</Text>
 
-  return (
-    <View style={styles.container}>
-      <CameraView
-        style={styles.camera}
-        onBarcodeScanned={(result) => {
-          if (!scanned) {
-            setScanned(true);
-            setQrData(JSON.stringify(result));
-          }
-        }}
-      />
+        <TouchableOpacity 
+          style={styles.button}
+          onPress={() => setScreen("scanner")}
+        >
+          <Text style={styles.buttonText}>Escanear QR</Text>
+        </TouchableOpacity>
 
-      <View style={styles.resultContainer}>
-        <Text style={styles.resultTitle}>Resultado:</Text>
-        <Text style={styles.resultText}>{qrData || "Escanea un código"}</Text>
-
-        {scanned && (
-          <TouchableOpacity
-            style={[styles.button, { marginTop: 15 }]}
-            onPress={() => {
-              setScanned(false);
-              setQrData("");
-            }}
-          >
-            <Text style={styles.buttonText}>Escanear de nuevo</Text>
-          </TouchableOpacity>
-        )}
+        <TouchableOpacity 
+          style={styles.button}
+          onPress={() => setScreen("camera")}
+        >
+          <Text style={styles.buttonText}>Tomar Foto</Text>
+        </TouchableOpacity>
       </View>
-    </View>
-  );
+    );
+  }
+
+  // ------------------ QR SCANNER SCREEN ------------------
+
+  if (screen === "scanner") {
+    return (
+      <View style={styles.container}>
+        <CameraView
+          style={styles.camera}
+          onBarcodeScanned={(result) => {
+            if (!scanned) {
+              setScanned(true);
+              setQrData(JSON.stringify(result));
+            }
+          }}
+        />
+
+        <View style={styles.resultContainer}>
+          <Text style={styles.resultTitle}>Resultado:</Text>
+          <Text style={styles.resultText}>{qrData || "Escanea un código"}</Text>
+
+          {scanned && (
+            <TouchableOpacity
+              style={[styles.button, { marginTop: 15 }]}
+              onPress={() => {
+                setScanned(false);
+                setQrData("");
+              }}
+            >
+              <Text style={styles.buttonText}>Escanear de nuevo</Text>
+            </TouchableOpacity>
+          )}
+
+          <TouchableOpacity
+            style={[styles.button, { marginTop: 20 }]}
+            onPress={() => setScreen("menu")}
+          >
+            <Text style={styles.buttonText}>Volver</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
+
+  // ------------------ CAMERA (PHOTO) SCREEN ------------------
+
+  if (screen === "camera") {
+    return (
+      <View style={styles.container}>
+        <CameraView ref={cameraRef} style={styles.camera} />
+
+        <View style={styles.resultContainer}>
+          <TouchableOpacity style={styles.button} onPress={takePhoto}>
+            <Text style={styles.buttonText}>Tomar FOTO</Text>
+          </TouchableOpacity>
+
+          {photo && (
+            <>
+              <Text style={styles.resultTitle}>Foto tomada:</Text>
+              <Image 
+                source={{ uri: photo }}
+                style={{ width: "100%", height: 250, borderRadius: 10 }}
+              />
+            </>
+          )}
+
+          <TouchableOpacity 
+            style={[styles.button, { marginTop: 20 }]}
+            onPress={() => setScreen("menu")}
+          >
+            <Text style={styles.buttonText}>Volver</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
+
+  return null;
 }
 
 
@@ -209,6 +293,19 @@ const styles = StyleSheet.create({
     textAlign: "center",
     color: "#007AFF",
     fontSize: 16,
+  },
+
+  menuContainer: {
+    flex: 1,
+    justifyContent: "center",
+    padding: 30,
+  },
+
+  menuTitle: {
+    fontSize: 28,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginBottom: 40,
   },
 
   resultContainer: {
